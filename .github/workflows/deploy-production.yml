@@ -9,7 +9,7 @@ on:
         type: choice
         options: [preflight, deploy]
   push:
-    branches: [develop]
+    branches: [main]
     paths:
       [
         src/**,
@@ -29,7 +29,7 @@ concurrency: { group: pullit-frontend-production, cancel-in-progress: false }
 jobs:
   transport-preflight:
     runs-on: ubuntu-latest
-    environment: pullit-frontend-production
+    environment: pullit-portfolio-frontend-production
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
@@ -92,7 +92,7 @@ jobs:
     needs: [transport-preflight, build]
     if: github.event_name == 'push' || inputs.operation == 'deploy'
     runs-on: ubuntu-latest
-    environment: pullit-frontend-production
+    environment: pullit-portfolio-frontend-production
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
@@ -108,9 +108,11 @@ jobs:
           DEPLOY_KEY: ${{ secrets.PULLIT_DEPLOY_SSH_PRIVATE_KEY }}
           KNOWN_HOSTS: ${{ vars.PULLIT_DEPLOY_SSH_KNOWN_HOSTS }}
           DEPLOY_HOST: ${{ vars.PULLIT_DEPLOY_HOST }}
+          PULLIT_CLOUDFLARE_ACCESS_CLIENT_ID: ${{ secrets.PULLIT_CLOUDFLARE_ACCESS_CLIENT_ID }}
+          PULLIT_CLOUDFLARE_ACCESS_CLIENT_SECRET: ${{ secrets.PULLIT_CLOUDFLARE_ACCESS_CLIENT_SECRET }}
         run: |
           set -euo pipefail
-          test -n "$DEPLOY_KEY" && test -n "$KNOWN_HOSTS" && test -n "$DEPLOY_HOST"
+          test -n "$DEPLOY_KEY" && test -n "$KNOWN_HOSTS" && test -n "$DEPLOY_HOST" && test -n "$PULLIT_CLOUDFLARE_ACCESS_CLIENT_ID" && test -n "$PULLIT_CLOUDFLARE_ACCESS_CLIENT_SECRET"
           install -d -m 700 ~/.ssh
           printf '%s\n' "$DEPLOY_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
