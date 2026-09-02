@@ -1,0 +1,75 @@
+name: Pull-it FE check
+
+on:
+  pull_request:
+    branches: [develop]
+    paths:
+      - 'src/**'
+      - 'public/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'index.html'
+      - 'vite.config.ts'
+      - '.env.example'
+      - 'tsconfig*.json'
+      - '.github/actions/**'
+      - '.github/workflows/ci.yml'
+      - '.github/workflows/deploy-production.yml'
+      - 'ops/production/**'
+  push:
+    branches: [develop]
+    paths:
+      - 'src/**'
+      - 'public/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'index.html'
+      - 'vite.config.ts'
+      - '.env.example'
+      - 'tsconfig*.json'
+      - '.github/actions/**'
+      - '.github/workflows/ci.yml'
+      - '.github/workflows/deploy-production.yml'
+      - 'ops/production/**'
+
+permissions:
+  contents: read
+
+jobs:
+  CI:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run Prettier check
+        run: pnpm prettier-check
+
+      - name: Run ESLint check
+        run: pnpm lint-check
+
+      - name: Run TSC check
+        run: pnpm tsc-check
+
+      - name: Build with the public portfolio base path
+        env:
+          VITE_PUBLIC_BASE_PATH: /pull-it/
+          VITE_API_BASE_URL: /pull-it
+        run: pnpm build
