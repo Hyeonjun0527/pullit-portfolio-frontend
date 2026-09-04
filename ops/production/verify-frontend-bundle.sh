@@ -19,11 +19,11 @@ if ! grep --fixed-strings --quiet '/pull-it/assets/' "${INDEX_FILE}"; then
   exit 1
 fi
 
-if rg --files-with-matches \
-  --glob '*.html' \
-  --glob '*.js' \
-  --glob '*.css' \
-  "https?://(qa\\.)?api\\.pull\\.it\\.kr|https?://pull\\.it\\.kr|[\\\"']/(?:assets|src)/" \
+if grep -R -E \
+  --include='*.html' \
+  --include='*.js' \
+  --include='*.css' \
+  "https?://(qa\\.)?api\\.pull\\.it\\.kr|https?://pull\\.it\\.kr|[\"']/(assets|src)/" \
   "${BUNDLE_DIRECTORY}" >/dev/null; then
   echo 'Pull-it frontend bundle contains a retired origin or root asset path.' >&2
   exit 1
