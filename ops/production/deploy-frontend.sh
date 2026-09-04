@@ -92,7 +92,7 @@ ln -sfn "$release_directory" "$frontend_root/.current-next"
 mv -Tf "$frontend_root/.current-next" "$frontend_root/current"
 
 if ! docker compose -p pullit-frontend -f "$compose_file" up -d --force-recreate pullit-frontend \
-  || ! wait_for_frontend '/pull-it/'; then
+  || ! wait_for_frontend '/pull-it'; then
   echo 'Pull-it frontend health check failed; restoring the previous release.' >&2
   restore_previous_release
   exit 1
