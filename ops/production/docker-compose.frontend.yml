@@ -14,7 +14,7 @@ services:
     security_opt:
       - no-new-privileges:true
     ports:
-      - "10.77.0.40:18081:18081"
+      - '10.77.0.40:18081:18081'
     networks: [pullit-internal]
 
 networks:
