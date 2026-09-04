@@ -13,14 +13,11 @@ services:
         read_only: true
     security_opt:
       - no-new-privileges:true
-    networks:
-      pullit-internal:
-      yeon-edge:
-        aliases: [pullit-frontend]
+    ports:
+      - '10.77.0.40:18081:18081'
+    networks: [pullit-internal]
 
 networks:
   pullit-internal:
     external: true
     name: pullit-portfolio-internal
-  yeon-edge:
-    external: true

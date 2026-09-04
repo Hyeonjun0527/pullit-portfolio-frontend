@@ -2,7 +2,7 @@ name: Pull-it FE check
 
 on:
   pull_request:
-    branches: [develop]
+    branches: [main]
     paths:
       - 'src/**'
       - 'public/**'
@@ -17,7 +17,7 @@ on:
       - '.github/workflows/deploy-production.yml'
       - 'ops/production/**'
   push:
-    branches: [develop]
+    branches: [main]
     paths:
       - 'src/**'
       - 'public/**'

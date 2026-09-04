@@ -70,7 +70,21 @@ restore_previous_release() {
   fi
 }
 
-docker network inspect yeon-edge >/dev/null
+wait_for_frontend() {
+  local path="$1"
+  local attempt
+
+  for attempt in {1..12}; do
+    if docker compose -p pullit-frontend -f "$compose_file" exec -T pullit-frontend \
+      wget --quiet --spider "http://127.0.0.1:18081$path"; then
+      return 0
+    fi
+    sleep 1
+  done
+
+  return 1
+}
+
 docker network inspect pullit-portfolio-internal >/dev/null
 docker compose -p pullit-frontend -f "$compose_file" config --quiet
 
@@ -78,8 +92,7 @@ ln -sfn "$release_directory" "$frontend_root/.current-next"
 mv -Tf "$frontend_root/.current-next" "$frontend_root/current"
 
 if ! docker compose -p pullit-frontend -f "$compose_file" up -d --force-recreate pullit-frontend \
-  || ! docker compose -p pullit-frontend -f "$compose_file" exec -T pullit-frontend \
-    wget --quiet --spider http://localhost:18081/pull-it/; then
+  || ! wait_for_frontend '/pull-it'; then
   echo 'Pull-it frontend health check failed; restoring the previous release.' >&2
   restore_previous_release
   exit 1
@@ -87,8 +100,7 @@ fi
 
 asset_path="$(grep -oE '/pull-it/assets/[^\"'\'' ]+\.(js|css)' "$release_directory/index.html" | head -n 1 || true)"
 if [ -z "$asset_path" ] \
-  || ! docker compose -p pullit-frontend -f "$compose_file" exec -T pullit-frontend \
-    wget --quiet --spider "http://localhost:18081$asset_path"; then
+  || ! wait_for_frontend "$asset_path"; then
   echo 'Pull-it frontend asset probe failed; restoring the previous release.' >&2
   restore_previous_release
   exit 1
