@@ -76,7 +76,7 @@ wait_for_frontend() {
 
   for attempt in {1..12}; do
     if docker compose -p pullit-frontend -f "$compose_file" exec -T pullit-frontend \
-      wget --quiet --spider "http://localhost:18081$path"; then
+      wget --quiet --spider "http://127.0.0.1:18081$path"; then
       return 0
     fi
     sleep 1
