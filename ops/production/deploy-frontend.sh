@@ -70,7 +70,6 @@ restore_previous_release() {
   fi
 }
 
-docker network inspect yeon-edge >/dev/null
 docker network inspect pullit-portfolio-internal >/dev/null
 docker compose -p pullit-frontend -f "$compose_file" config --quiet
 
