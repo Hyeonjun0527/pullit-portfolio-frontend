@@ -437,6 +437,12 @@ function SideBar({ isOpen, closeSideBar, esClose }: SideBarProps) {
               <SideBarNavTxt>{MENUS.WRONG}</SideBarNavTxt>
             </SideBarNavItem>
           </NavLink>
+          <a href="/pull-it-docs">
+            <SideBarNavItem active={false}>
+              <BookOpen size={14} />
+              <SideBarNavTxt>프로젝트 문서</SideBarNavTxt>
+            </SideBarNavItem>
+          </a>
         </SideBarNav>
       </SideBarMain>
 

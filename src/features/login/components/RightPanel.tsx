@@ -104,6 +104,22 @@ const LinkButton = styled.button`
   }
 `;
 
+const DocsLink = styled.a`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  margin-top: ${({ theme }) => theme.spacing.spacing3};
+  color: ${({ theme }) => theme.colors.semantic.primary};
+  font-size: ${({ theme }) => theme.typography.subtitle2Regular.fontSize};
+  text-decoration: underline;
+  text-underline-offset: 4px;
+
+  &:hover {
+    color: ${({ theme }) => theme.colors.gray.gray10};
+  }
+`;
+
 const RightPanel = () => {
   const handleKakaoLogin = () => {
     window.location.href = getKakaoLoginUrl();
@@ -136,6 +152,7 @@ const RightPanel = () => {
           로그인하면 <LinkButton>이용약관</LinkButton>과 <LinkButton>개인정보처리방침</LinkButton>에
           동의하는 것으로 간주됩니다.
         </TermsText>
+        <DocsLink href="/pull-it-docs">프로젝트 문서 보기</DocsLink>
       </div>
     </RightSide>
   );
