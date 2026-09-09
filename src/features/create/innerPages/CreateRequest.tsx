@@ -1,4 +1,5 @@
 import styled from '@emotion/styled';
+import axios from 'axios';
 import Spinner from '@/features/create/components/Spinner';
 import Spacer from '@/shared/components/Spacer';
 import { useEffect, useState, useCallback, useRef } from 'react';
@@ -7,6 +8,66 @@ import Complete from '@/features/create/components/Complete';
 import api from '@/shared/api/axiosClient';
 import type { QuestionType } from '@/features/create/constants/questionTypeConstants';
 import { QUESTION_TYPE_MAP } from '@/features/create/constants/questionTypeConstants';
+
+const QUESTION_SET_POLL_INTERVAL_MS = 2_000;
+const QUESTION_SET_CREATION_TIMEOUT_MS = 5 * 60 * 1_000;
+const QUESTION_SET_PENDING_CODE = 'QSE_002';
+
+interface ProblemDetail {
+  code?: string;
+}
+
+const getQuestionSetIdFromLocation = (location: string | undefined): number => {
+  const match = location?.match(/\/question-set\/(\d+)(?:[/?#]|$)/);
+  const id = match ? Number(match[1]) : Number.NaN;
+
+  if (!Number.isSafeInteger(id) || id <= 0) {
+    throw new Error('생성된 문제집 번호를 확인할 수 없습니다.');
+  }
+
+  return id;
+};
+
+const wait = (milliseconds: number, signal: AbortSignal): Promise<void> =>
+  new Promise((resolve, reject) => {
+    const timeoutId = window.setTimeout(resolve, milliseconds);
+
+    signal.addEventListener(
+      'abort',
+      () => {
+        window.clearTimeout(timeoutId);
+        reject(new DOMException('요청이 취소되었습니다.', 'AbortError'));
+      },
+      { once: true },
+    );
+  });
+
+const waitForQuestionSet = async (questionSetId: number, signal: AbortSignal): Promise<void> => {
+  const deadline = Date.now() + QUESTION_SET_CREATION_TIMEOUT_MS;
+
+  while (Date.now() < deadline) {
+    try {
+      await api.get(`/question-set/${questionSetId}`, { signal });
+      return;
+    } catch (error: unknown) {
+      if (signal.aborted) {
+        throw error;
+      }
+
+      const isPending =
+        axios.isAxiosError<ProblemDetail>(error) &&
+        error.response?.data?.code === QUESTION_SET_PENDING_CODE;
+
+      if (!isPending) {
+        throw error;
+      }
+    }
+
+    await wait(QUESTION_SET_POLL_INTERVAL_MS, signal);
+  }
+
+  throw new Error('문제 생성 시간이 오래 걸리고 있습니다. 나의 문제집에서 상태를 확인해 주세요.');
+};
 
 interface CreateRequestProps {
   selectedFile: { id: string; name: string | null } | null;
@@ -102,6 +163,7 @@ const CreateRequest: React.FC<CreateRequestProps> = ({
   const [status, setStatus] = useState<'requesting' | 'error'>('requesting');
   const [error, setError] = useState<string | null>(null);
   const requestSent = useRef(false);
+  const pollingAbortController = useRef<AbortController | null>(null);
   const [idempotencyKey] = useState(() => uuidv4());
 
   const createQuestionSet = useCallback(async () => {
@@ -112,8 +174,12 @@ const CreateRequest: React.FC<CreateRequestProps> = ({
     setStatus('requesting');
     setError(null);
 
+    pollingAbortController.current?.abort();
+    const abortController = new AbortController();
+    pollingAbortController.current = abortController;
+
     try {
-      await api.post(
+      const response = await api.post(
         '/question-set',
         {
           title: selectedFile.name,
@@ -128,7 +194,23 @@ const CreateRequest: React.FC<CreateRequestProps> = ({
           },
         },
       );
+
+      const locationHeader = response.headers.location;
+      const createdQuestionSetId = getQuestionSetIdFromLocation(
+        typeof locationHeader === 'string' ? locationHeader : undefined,
+      );
+
+      setQuestionSetId(createdQuestionSetId);
+      await waitForQuestionSet(createdQuestionSetId, abortController.signal);
+
+      if (!abortController.signal.aborted) {
+        setQuestionSetReady(true);
+      }
     } catch (err: unknown) {
+      if (abortController.signal.aborted) {
+        return;
+      }
+
       if (err instanceof Error) {
         setError(`문제집 생성 중 오류: ${err.message}`);
       } else {
@@ -145,6 +227,13 @@ const CreateRequest: React.FC<CreateRequestProps> = ({
     requestSent.current = true;
     createQuestionSet();
   }, [createQuestionSet]);
+
+  useEffect(
+    () => () => {
+      pollingAbortController.current?.abort();
+    },
+    [],
+  );
 
   if (questionSetReady) {
     return (
