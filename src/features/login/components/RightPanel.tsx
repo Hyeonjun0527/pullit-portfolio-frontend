@@ -1,5 +1,6 @@
 import styled from '@emotion/styled';
 import DotLottiePlayer from '@aarsteinmedia/dotlottie-react';
+import { BookOpen, ArrowRight } from 'lucide-react';
 import BenefitList from '@/features/login/components/BenefitList';
 import SampleLottie from '@/shared/assets/lotties/sample.lottie';
 import { getKakaoLoginUrl } from '@/shared/api/apiService';
@@ -109,14 +110,23 @@ const DocsLink = styled.a`
   align-items: center;
   justify-content: center;
   min-height: 44px;
+  gap: ${({ theme }) => theme.spacing.spacing2};
+  padding: ${({ theme }) => theme.spacing.spacing2};
   margin-top: ${({ theme }) => theme.spacing.spacing3};
+  border: 1px solid ${({ theme }) => theme.colors.gray.gray3};
+  border-radius: ${({ theme }) => theme.radius.radius1};
+  background-color: ${({ theme }) => theme.colors.gray.gray0};
   color: ${({ theme }) => theme.colors.semantic.primary};
   font-size: ${({ theme }) => theme.typography.subtitle2Regular.fontSize};
-  text-decoration: underline;
-  text-underline-offset: 4px;
+  text-decoration: none;
 
   &:hover {
-    color: ${({ theme }) => theme.colors.gray.gray10};
+    border-color: ${({ theme }) => theme.colors.semantic.primary};
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${({ theme }) => theme.colors.semantic.primary};
+    outline-offset: 3px;
   }
 `;
 
@@ -152,7 +162,11 @@ const RightPanel = () => {
           로그인하면 <LinkButton>이용약관</LinkButton>과 <LinkButton>개인정보처리방침</LinkButton>에
           동의하는 것으로 간주됩니다.
         </TermsText>
-        <DocsLink href="/pull-it-docs">프로젝트 문서 보기</DocsLink>
+        <DocsLink href="/pull-it-docs">
+          <BookOpen size={18} aria-hidden="true" />
+          프로젝트 문서 보기
+          <ArrowRight size={18} aria-hidden="true" />
+        </DocsLink>
       </div>
     </RightSide>
   );
