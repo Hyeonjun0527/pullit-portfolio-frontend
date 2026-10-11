@@ -15,7 +15,41 @@ const QUESTION_SET_PENDING_CODE = 'QSE_002';
 
 interface ProblemDetail {
   code?: string;
+  detail?: string;
 }
+
+const ERROR_MESSAGE_BY_CODE = new Map<string, string>([
+  ['QSE_003', 'AI 문제 생성에 실패했습니다. 잠시 후 다시 시도해 주세요.'],
+  ['QSE_009', '문서 내용을 문제로 만들 수 없습니다. 다른 PDF로 다시 시도해 주세요.'],
+  ['QSE_007', '아직 PDF 분석이 끝나지 않았습니다. 잠시 후 다시 시도해 주세요.'],
+]);
+
+const getCreateErrorMessage = (error: unknown): string => {
+  if (axios.isAxiosError<ProblemDetail>(error)) {
+    const errorCode = error.response?.data?.code;
+    const detail = error.response?.data?.detail?.trim();
+
+    if (errorCode && ERROR_MESSAGE_BY_CODE.has(errorCode)) {
+      return ERROR_MESSAGE_BY_CODE.get(errorCode)!;
+    }
+
+    if (detail && error.response?.status && error.response.status < 500) {
+      return detail;
+    }
+
+    if (error.code === 'ECONNABORTED' || error.code === 'ERR_NETWORK') {
+      return '서버에 연결하지 못했습니다. 네트워크 상태를 확인한 뒤 다시 시도해 주세요.';
+    }
+
+    return '문제집 생성 요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.';
+  }
+
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return '문제집 생성 중 알 수 없는 오류가 발생했습니다.';
+};
 
 const getQuestionSetIdFromLocation = (location: string | undefined): number => {
   const match = location?.match(/\/question-set\/(\d+)(?:[/?#]|$)/);
@@ -211,11 +245,7 @@ const CreateRequest: React.FC<CreateRequestProps> = ({
         return;
       }
 
-      if (err instanceof Error) {
-        setError(`문제집 생성 중 오류: ${err.message}`);
-      } else {
-        setError('문제집 생성 중 알 수 없는 오류가 발생했습니다.');
-      }
+      setError(getCreateErrorMessage(err));
       setStatus('error');
     }
   }, [selectedFile, questionType, setQuestionSetId, setQuestionSetReady, idempotencyKey]);

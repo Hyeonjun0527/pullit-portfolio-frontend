@@ -2,7 +2,7 @@ export type DifficultyType = 'EASY' | 'MEDIUM' | 'HARD';
 
 export type QuestionType = 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'SHORT_ANSWER';
 
-export type QuestionSetStatus = 'FAILED' | 'PENDING' | 'COMPLETE';
+export type QuestionSetStatus = 'FAILED' | 'PENDING' | 'COMPLETE' | 'UNPROCESSABLE';
 
 export type LearningStatus = 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED';
 
