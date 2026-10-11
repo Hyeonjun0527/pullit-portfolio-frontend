@@ -51,9 +51,10 @@ jobs:
           status="$(curl --silent --show-error --connect-timeout 10 --max-time 30 --output /dev/null --write-out '%{http_code}' \
             --header "CF-Access-Client-Id: $PULLIT_CLOUDFLARE_ACCESS_CLIENT_ID" \
             --header "CF-Access-Client-Secret: $PULLIT_CLOUDFLARE_ACCESS_CLIENT_SECRET" "https://$DEPLOY_HOST")"
-          # SSH tunnel probes can be answered as 200 by the Cloudflare edge or
-          # 530 by the SSH origin. Access denial is a login/authorization response.
-          case "$status" in 200|530) ;; *) echo "Cloudflare Access service-token probe returned HTTP $status; expected 200 or 530" >&2; exit 1 ;; esac
+          # SSH tunnel probes can be answered as 200 by the Cloudflare edge,
+          # 530 by the SSH origin, or 502 when the SSH origin rejects a plain HTTPS probe.
+          # Access denial is a login/authorization response.
+          case "$status" in 200|502|530) ;; *) echo "Cloudflare Access service-token probe returned HTTP $status; expected 200, 502, or 530" >&2; exit 1 ;; esac
           install -d -m 700 ~/.ssh
           printf '%s\n' "$DEPLOY_KEY" > ~/.ssh/id_ed25519
           printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
